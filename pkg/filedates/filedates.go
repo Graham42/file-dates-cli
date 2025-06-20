@@ -2,10 +2,11 @@ package filedates
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/itlightning/dateparse"
 )
 
 var dateRegex = regexp.MustCompile(`\d{2}[\s-]+\d{2}[\s-]+\d{2,4}|\d{4}[\s-]+\d{2}[\s-]+\d{2}`)
@@ -30,11 +31,5 @@ func FixDateInString(input string) (string, error) {
 }
 
 func ParseDate(s string) (time.Time, error) {
-	layouts := []string{"02-01-2006", "01-02-2006", "2006-01-02", "06-01-02", "02-01-06", "01-02-06"}
-	for _, layout := range layouts {
-		if t, err := time.Parse(layout, s); err == nil {
-			return t, nil
-		}
-	}
-	return time.Time{}, fmt.Errorf("unrecognized date: %s", s)
+	return dateparse.ParseStrict(s)
 }
