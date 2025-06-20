@@ -34,6 +34,13 @@ func runNormalize(in io.Reader, out io.Writer) error {
 	}
 	filename := strings.TrimSpace(scanner.Text())
 
+	if scanner.Scan() {
+		return errors.New("expected single line of input")
+	}
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
 	normalized, err := filedates.FixDateInString(filename)
 	if err != nil {
 		return err

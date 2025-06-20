@@ -1,0 +1,6 @@
+stdin input.txt
+exec $CLI normalize
+stdout 'report_2022-12-31.txt\n'
+
+-- input.txt --
+report_31-12-2022.txt

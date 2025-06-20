@@ -23,3 +23,10 @@ func TestRunNormalizeAmbiguous(t *testing.T) {
 		t.Fatalf("expected error for ambiguous date")
 	}
 }
+
+func TestRunNormalizeMultiLine(t *testing.T) {
+	in := bytes.NewBufferString("file1\nfile2\n")
+	if err := runNormalize(in, &bytes.Buffer{}); err == nil {
+		t.Fatalf("expected error for multiple lines")
+	}
+}
