@@ -38,7 +38,7 @@ func runNormalize() error {
 	if filename == "" {
 		return errors.New("no input provided")
 	}
-	normalized, err := normalizeFilename(filename)
+	normalized, err := fixDateInString(filename)
 	if err != nil {
 		return err
 	}
@@ -55,25 +55,35 @@ func readStdin() (string, error) {
 	return string(b), nil
 }
 
-// TODO: refine this regex to support more date formats
-var dateRE = regexp.MustCompile(`\d{2}-\d{2}-\d{2,4}`)
+// TODO improve the regex to ensure there's no extra digits on either side of the date
+var dateRegex = regexp.MustCompile(`\d{2}[\s-]+\d{2}[\s-]+\d{2,4}|\d{4}[\s-]+\d{2}[\s-]+\d{2}`)
 
-func normalizeFilename(name string) (string, error) {
-	loc := dateRE.FindStringIndex(name)
-	if loc == nil {
-		return "", errors.New("no date found")
+// fixDateInString replaces the first date found in the input string with its ISO format.
+func fixDateInString(input string) (string, error) {
+	dateMatchIndex := dateRegex.FindStringIndex(input)
+	if dateMatchIndex == nil {
+		return "", errors.New("no date found in: '" + input + "'")
 	}
-	dateStr := name[loc[0]:loc[1]]
+	dateStr := input[dateMatchIndex[0]:dateMatchIndex[1]]
+	// normalize the separators to a single `-`
+	dateStr = strings.ReplaceAll(dateStr, " ", "-")
+	dateStr = strings.ReplaceAll(dateStr, "_", "-")
+	// reduce multiple dashes to a single dash
+	dateStr = regexp.MustCompile(`-+`).ReplaceAllString(dateStr, "-")
+
 	t, err := parseDate(dateStr)
 	if err != nil {
 		return "", err
 	}
-	iso := t.Format("2006-01-02")
-	return strings.Replace(name, dateStr, iso, 1), nil
+	isoFormattedDate := t.Format("2006-01-02")
+	return strings.Replace(input, dateStr, isoFormattedDate, 1), nil
 }
 
 func parseDate(s string) (time.Time, error) {
-	layouts := []string{"02-01-2006", "01-02-2006", "06-01-02"}
+	layouts := []string{"02-01-2006", "01-02-2006", "2006-01-02",
+		"06-01-02", "02-01-06", "01-02-06"}
+	// TODO raise an error if the date could be ambiguous
+	// e.g. 01-02-03 could be 2001-02-03 or 2003-01-02 or 2003-02-01
 	for _, layout := range layouts {
 		if t, err := time.Parse(layout, s); err == nil {
 			return t, nil

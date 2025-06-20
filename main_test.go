@@ -22,7 +22,7 @@ func TestParseDate(t *testing.T) {
 }
 
 func TestNormalizeFilename(t *testing.T) {
-	got, err := normalizeFilename("report_12-31-2022.txt")
+	got, err := fixDateInString("report_12-31-2022.txt")
 	if err != nil {
 		t.Fatalf("normalizeFilename returned error: %v", err)
 	}
