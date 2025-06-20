@@ -1,7 +1,7 @@
 package filedates
 
 import (
-	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -9,18 +9,24 @@ import (
 	"github.com/itlightning/dateparse"
 )
 
-var dateRegex = regexp.MustCompile(`\d{2}[\s-]+\d{2}[\s-]+\d{2,4}|\d{4}[\s-]+\d{2}[\s-]+\d{2}`)
+var dayPattern = `(?:\d{1,2}(?:st|nd|rd|th)?)`
+var monthPattern = `(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sept?(?:ember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)`
+var yearPattern = `(?:\d{2,4})`
+
+// could be year month day, month day year, day month year, or numeric date
+var datePattern = fmt.Sprintf("\b(?:%s.*%s.*%s|%s.*%s.*%s|%s.*%s.*%s|\\d{1,4}[-_ ,]+\\d{1,2}[-_ ,]+\\d{1,4})\b",
+	dayPattern, monthPattern, yearPattern,
+	monthPattern, dayPattern, yearPattern,
+	yearPattern, monthPattern, dayPattern)
+var dateRegex = regexp.MustCompile(datePattern)
 
 // FixDateInString replaces the first date found in the input string with its ISO format.
 func FixDateInString(input string) (string, error) {
 	idx := dateRegex.FindStringIndex(input)
 	if idx == nil {
-		return "", errors.New("no date found in: '" + input + "'")
+		return "", fmt.Errorf("no date found in: '%s'", input)
 	}
 	dateStr := input[idx[0]:idx[1]]
-	dateStr = strings.ReplaceAll(dateStr, " ", "-")
-	dateStr = strings.ReplaceAll(dateStr, "_", "-")
-	dateStr = regexp.MustCompile(`-+`).ReplaceAllString(dateStr, "-")
 
 	t, err := ParseDate(dateStr)
 	if err != nil {
