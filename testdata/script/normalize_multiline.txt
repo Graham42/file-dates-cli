@@ -1,0 +1,8 @@
+stdin multiline.txt
+exec $CLI normalize
+stderr 'expected single line of input'
+
+-- multiline.txt --
+file1
+file2
+
