@@ -3,11 +3,18 @@ CLI for cleaning up filenames with dates
 
 ## Usage
 
-For now the project contains a very simple CLI which prints `Hello, world!`.
-It requires Go 1.23 or later. You can run it with:
+For now the project contains a simple CLI with a `normalize` command for
+converting dates in filenames to ISO 8601 format. It requires Go 1.23 or later.
+You can run it with:
 
 ```bash
-go run main.go
+go run main.go <command>
+```
+
+For example, to normalize a filename you can run:
+
+```bash
+echo "report_12-31-2022.txt" | go run main.go normalize
 ```
 
 This is a starting point that will be extended to support more commands.
