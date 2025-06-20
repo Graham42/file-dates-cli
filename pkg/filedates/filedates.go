@@ -14,7 +14,7 @@ var monthPattern = `(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(
 var yearPattern = `(?:\d{2,4})`
 
 // could be year month day, month day year, day month year, or numeric date
-var datePattern = fmt.Sprintf("\b(?:%s.*%s.*%s|%s.*%s.*%s|%s.*%s.*%s|\\d{1,4}[-_ ,]+\\d{1,2}[-_ ,]+\\d{1,4})\b",
+var datePattern = fmt.Sprintf("(?:%s.*%s.*%s|%s.*%s.*%s|%s.*%s.*%s|\\d{1,4}[-_ ,]+\\d{1,2}[-_ ,]+\\d{1,4})",
 	dayPattern, monthPattern, yearPattern,
 	monthPattern, dayPattern, yearPattern,
 	yearPattern, monthPattern, dayPattern)
@@ -37,5 +37,25 @@ func FixDateInString(input string) (string, error) {
 }
 
 func ParseDate(s string) (time.Time, error) {
-	return dateparse.ParseStrict(s)
+	t, err := dateparse.ParseStrict(s)
+	if err == nil {
+		return t, nil
+	}
+	firstErr := err
+	// attempt to parse with a more flexible format
+	// reduce separators to a single `.`
+	s = regexp.MustCompile(`[-_ ,]+`).ReplaceAllString(s, ".")
+	s = regexp.MustCompile(`\.+`).ReplaceAllString(s, ".")
+	t, err = dateparse.ParseStrict(s)
+	if err == nil {
+		return t, nil
+	}
+	// last attempt with `:` instead of `.`
+	s = regexp.MustCompile(`\.`).ReplaceAllString(s, ":")
+	t, err = dateparse.ParseStrict(s)
+	if err == nil {
+		return t, nil
+	} else {
+		return time.Time{}, firstErr
+	}
 }
